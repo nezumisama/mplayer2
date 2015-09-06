@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #usage:
 #
@@ -51,7 +51,7 @@ o = open(OUTFILE,'wt')
 
 for line in open(INFILE):
     if line.startswith('timestamp'):
-	line = shift(line,DIFF)
+        line = shift(line,DIFF)
 
     o.write(line)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Tool to compare MPlayer translation files against a base file. Reports
 # conflicting arguments, extra strings not present in the base file and
@@ -37,22 +37,22 @@ def compare(base, other, show_missing=False):
             missing.append(key)
             continue
         if re.findall(r, base[key]) != re.findall(r, other[key]):
-            print 'Mismatch: ', key
-            print base[key]
-            print other[key]
-            print
+            print('Mismatch: ', key)
+            print(base[key])
+            print(other[key])
+            print()
         del other[key]
     if other:
-        extra = other.keys()
+        extra = list(other.keys())
         extra.sort()
-        print 'Extra: ', ' '.join(extra)
+        print('Extra: ', ' '.join(extra))
     if show_missing and missing:
         missing.sort()
-        print 'Missing: ', ' '.join(missing)
+        print('Missing: ', ' '.join(missing))
 
 if len(sys.argv) < 3:
-    print 'Usage:\n'+sys.argv[0]+' [--missing] base_helpfile otherfile1 '\
-          '[otherfile2 ...]'
+    print('Usage:\n'+sys.argv[0]+' [--missing] base_helpfile otherfile1 '\
+          '[otherfile2 ...]')
     sys.exit(1)
 i = 1
 show_missing = False
@@ -61,6 +61,6 @@ if sys.argv[i] in ( '--missing', '-missing' ):
     i = 2
 base = parse(sys.argv[i])
 for filename in sys.argv[i+1:]:
-    print '*****', filename
+    print('*****', filename)
     compare(base, parse(filename), show_missing)
-    print '\n'
+    print('\n')
