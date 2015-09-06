@@ -39,6 +39,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <math.h>
+#include <locale.h>
 #include "talloc.h"
 #include "gl_common.h"
 #include "old_vo_wrapper.h"
@@ -823,7 +824,10 @@ static void replace_var_str(char **text, const char *name, const char *replace)
 
 static void replace_var_float(char **text, const char *name, float replace)
 {
+    char *tmp = setlocale(LC_NUMERIC, NULL);
+    setlocale(LC_NUMERIC, "C");
     char *s = talloc_asprintf(NULL, "%e", replace);
+    setlocale(LC_NUMERIC, tmp);
     replace_var_str(text, name, s);
     talloc_free(s);
 }
