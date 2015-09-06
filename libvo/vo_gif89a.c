@@ -196,7 +196,11 @@ static int config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: Some functionality has been disabled.\n");
 #endif
 
+#if GIFLIB_MAJOR > 4
+	new_gif = EGifOpenFileName(gif_filename, 0, NULL);
+#else
 	new_gif = EGifOpenFileName(gif_filename, 0);
+#endif
 	if (new_gif == NULL) {
 		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: error opening file \"%s\" for output.\n", gif_filename);
 		return 1;
@@ -215,7 +219,11 @@ static int config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 		return 1;
 	}
 
+#if GIFLIB_MAJOR > 4
+	reduce_cmap = GifMakeMapObject(256, NULL);
+#else
 	reduce_cmap = MakeMapObject(256, NULL);
+#endif
 	if (reduce_cmap == NULL) {
 		free(slice_data); slice_data = NULL;
 		free(reduce_data); reduce_data = NULL;
@@ -267,7 +275,11 @@ static int gif_reduce(int width, int height, uint8_t *src, uint8_t *dst, GifColo
 	}
 
 	R = Ra; G = Ga; B = Ba;
+#if GIFLIB_MAJOR > 4
+	return GifQuantizeBuffer(width, height, &size, R, G, B, dst, colors);
+#else
 	return QuantizeBuffer(width, height, &size, R, G, B, dst, colors);
+#endif
 }
 
 static void flip_page(void)
@@ -358,15 +370,26 @@ static void uninit(void)
 			MPLAYER_VERSION, VO_GIF_REVISION,
 			"joey@nicewarrior.org");
 		EGifPutComment(new_gif, temp);
+#if GIFLIB_MAJOR == 5
+  #if GIFLIB_MINOR >= 1
+		EGifCloseFile(new_gif, NULL); // also frees gif storage space.
+  #else
 		EGifCloseFile(new_gif); // also frees gif storage space.
+  #endif
+#else
+		EGifCloseFile(new_gif); // also frees gif storage space.
+#endif
 	}
 
 	// free our allocated ram
 	free(gif_filename);
 	free(slice_data);
 	free(reduce_data);
+#if GIFLIB_MAJOR > 4
+	if (reduce_cmap != NULL) GifFreeMapObject(reduce_cmap);
+#else
 	if (reduce_cmap != NULL) FreeMapObject(reduce_cmap);
-
+#endif
 	// set the pointers back to null.
 	new_gif = NULL;
 	gif_filename = NULL;

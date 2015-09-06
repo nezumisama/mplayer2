@@ -44,6 +44,16 @@ typedef struct {
 
 #define GIF_SIGNATURE (('G' << 16) | ('I' << 8) | 'F')
 
+static void PrintGifError(errcode)
+{
+  char *Err = GifErrorString(errcode);
+
+  if (Err != NULL)
+    fprintf(stderr, "\nGIF-LIB error: %s.\n", Err);
+  else
+    fprintf(stderr, "\nGIF-LIB undefined error %d.\n", errcode);
+}
+
 #ifndef CONFIG_GIF_TVT_HACK
 // not supported by certain versions of the library
 static int my_read_gif(GifFileType *gif, uint8_t *buf, int len)
@@ -240,6 +250,7 @@ static demuxer_t* demux_open_gif(demuxer_t* demuxer)
   gif_priv_t *priv = calloc(1, sizeof(gif_priv_t));
   sh_video_t *sh_video = NULL;
   GifFileType *gif = NULL;
+  int GifError;
 
   priv->current_pts = 0;
   demuxer->seekable = 0; // FIXME
@@ -254,12 +265,12 @@ static demuxer_t* demux_open_gif(demuxer_t* demuxer)
   // not read from the beginning of the file and the command will fail.
   // with this hack enabled, you will lose the ability to stream a GIF.
   lseek(demuxer->stream->fd, 0, SEEK_SET);
-  gif = DGifOpenFileHandle(demuxer->stream->fd);
+  gif = DGifOpenFileHandle(demuxer->stream->fd, &GifError);
 #else
-  gif = DGifOpen(demuxer->stream, my_read_gif);
+  gif = DGifOpen(demuxer->stream, my_read_gif, &GifError);
 #endif
   if (!gif) {
-    PrintGifError();
+    PrintGifError(GifError);
     free(priv);
     return NULL;
   }
@@ -300,7 +311,15 @@ static void demux_close_gif(demuxer_t* demuxer)
 {
   gif_priv_t *priv = demuxer->priv;
   if (!priv) return;
+#if GIFLIB_MAJOR == 5
+  #if GIFLIB_MINOR >= 1
+  if (priv->gif && DGifCloseFile(priv->gif, NULL) == GIF_ERROR)
+  #else
+    if (priv->gif && DGifCloseFile(priv->gif) == GIF_ERROR)
+  #endif
+#else
   if (priv->gif && DGifCloseFile(priv->gif) == GIF_ERROR)
+#endif
     PrintGifError();
   free(priv->refimg);
   free(priv);
