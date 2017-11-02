@@ -37,6 +37,7 @@
 
 #include <libavutil/common.h>
 #include <libavcodec/vdpau.h>
+#include <vdpau/vdpau_x11.h>
 
 #include "config.h"
 #include "mp_msg.h"
